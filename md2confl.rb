@@ -14,9 +14,9 @@ optparse = OptionParser.new do|opts|
     options[:pageId] = pageId
   end
 
-  options[:templatePageId] = nil
-  opts.on('-t', '--templatePageId TEMPLATE_PAGE_ID', 'If the page id doesn''t exist, create it based on a template page.') do |templatePageId|
-    options[:templatePageId] = templatePageId
+  options[:parentPageId] = nil
+  opts.on('-t', '--parentPageId PARENT_PAGE_ID', 'If the page id doesn''t exist, create it under a parent page.') do |parentPageId|
+    options[:parentPageId] = parentPageId
   end
 
   options[:spaceName] = nil
@@ -74,17 +74,13 @@ uploader_page = pages.detect { |page| page.id == options[:pageId] }
 create_page = false
 
 if uploader_page.nil?
-  # get the template page and update its id
-  template_page = pages.detect { |page| page.id == options[:templatePageId] }
-  if template_page.nil?
-    puts "exiting... could not find pageId: #{options[:pageId]} or templatePageId: #{options[:templatePageId]}"
+  if not options[:parentPageId].nil?
+    uploader_page = ConfluenceSoap::Page.from_hash({space: options[:spaceName], title: 'Something else', content: '', parent_id: options[:parentPageId] })
+    create_page = true
+  else
+    puts "exiting... could not find pageId: #{options[:pageId]} and no parentPageId given"
     exit
   end
-  uploader_page = template_page
-  uploader_page.url = nil
-  uploader_page.id = nil
-  uploader_page.title = "Something else"
-  create_page = true
 end
 
 begin
