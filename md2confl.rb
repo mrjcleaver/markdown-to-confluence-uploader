@@ -14,6 +14,11 @@ optparse = OptionParser.new do|opts|
     options[:pageId] = pageId
   end
 
+  options[:templatePageId] = nil
+  opts.on('-t', '--templatePageId TEMPLATE_PAGE_ID', 'If the page id doesn''t exist, create it based on a template page.') do |templatePageId|
+    options[:templatePageId] = templatePageId
+  end
+
   options[:spaceName] = nil
   opts.on('-s', '--space SPACE_NAME', 'REQUIRED. The Confluence space name in which the page resides.') do |space|
     options[:spaceName] = space
@@ -66,10 +71,20 @@ cs = ConfluenceSoap.new("#{options[:server]}/rpc/soap-axis/confluenceservice-v2?
 
 pages = cs.get_pages(options[:spaceName])
 uploader_page = pages.detect { |page| page.id == options[:pageId] }
+create_page = false
 
 if uploader_page.nil?
-  puts "exiting... could not find pageId: #{options[:pageId]}"
-  exit
+  # get the template page and update its id
+  template_page = pages.detect { |page| page.id == options[:templatePageId] }
+  if template_page.nil?
+    puts "exiting... could not find pageId: #{options[:pageId]} or templatePageId: #{options[:templatePageId]}"
+    exit
+  end
+  uploader_page = template_page
+  uploader_page.url = nil
+  uploader_page.id = nil
+  uploader_page.title = "Something else"
+  create_page = true
 end
 
 begin
@@ -79,8 +94,10 @@ rescue Exception => ex
   warn "There was an error running the converter: \n#{ex}"
 end
 
-@convertedText = "#{@convertedText}\n\n(rendered at #{Time.now.getutc} by md2confl)"
-
 uploader_page.content = cs.convert_wiki_to_storage_format(@convertedText)
-options = {minorEdit: true, versionComment: 'updated by md2confl'}
-cs.update_page(uploader_page)
+
+if create_page
+  cs.store_page(uploader_page)
+else
+  cs.update_page(uploader_page)
+end
