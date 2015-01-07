@@ -10,7 +10,7 @@ optparse = OptionParser.new do|opts|
   opts.banner = "Usage: md2confl.rb [options...] -s <SPACE_NAME> -i <PAGE_ID>\nassumes defaults that can be set in options parsing..."
 
   options[:pageId] = nil
-  opts.on('-i', '--pageId PAGE_ID', 'REQUIRED. The Confluence page id to upload the converted markdown to.') do |pageId|
+  opts.on('-i', '--pageId PAGE_ID', 'The Confluence page id to upload the converted markdown to.') do |pageId|
     options[:pageId] = pageId
   end
 
@@ -61,7 +61,7 @@ optparse.parse!
 
 # space_name and page_id are required arguments
 raise OptionParser::MissingArgument, '-s SPACE_NAME is a required argument' if options[:spaceName].nil?
-raise OptionParser::MissingArgument, '-p PAGE_ID is a required argument' if options[:pageId].nil?
+raise OptionParser::MissingArgument, 'either -i PAGE_ID or -t PARENT_PAGE_ID is required' if options[:pageId].nil? and options[:parentPageId].nil?
 
 user = ENV['CONFLUENCE_USER'] || options[:user] || ''
 password = ENV['CONFLUENCE_PASSWORD'] || options[:password] || ''
@@ -70,12 +70,17 @@ opts = options[:verbose] ? {} : {log: false}
 cs = ConfluenceSoap.new("#{options[:server]}/rpc/soap-axis/confluenceservice-v2?wsdl", user, password, opts)
 
 pages = cs.get_pages(options[:spaceName])
-uploader_page = pages.detect { |page| page.id == options[:pageId] }
+unless options[:pageId].nil?
+  uploader_page = pages.detect { |page| page.id == options[:pageId] }
+end
 create_page = false
 
 if uploader_page.nil?
   if not options[:parentPageId].nil?
-    uploader_page = ConfluenceSoap::Page.from_hash({space: options[:spaceName], title: 'Something else', content: '', parent_id: options[:parentPageId] })
+    # get filename, remove pluses and .md for use as title
+    filenameIndex = options[:markdownFile].rindex("/") + 1
+    markdownTitle = options[:markdownFile][filenameIndex..-4].gsub("+", " ")
+    uploader_page = ConfluenceSoap::Page.from_hash({space: options[:spaceName], title: markdownTitle, content: '', parent_id: options[:parentPageId] })
     create_page = true
   else
     puts "exiting... could not find pageId: #{options[:pageId]} and no parentPageId given"
