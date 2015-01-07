@@ -7,18 +7,23 @@ Running
 
 	$ ./md2confl.rb -s <SPACE_NAME> -i <PAGE_ID>
 
+    OR
+
+	$ ./md2confl.rb -s <SPACE_NAME> -t <PARENT_PAGE_ID>
+
 A full list of options can be found by running `md2confl.rb --help`:
 
 	Usage: md2confl.rb [options...] -s <SPACE_NAME> -i <PAGE_ID>
 	assumes defaults that can be set in options parsing...
-	    -i, --pageId PAGE_ID             REQUIRED. The Confluence page id to upload the converted markdown to.
-	    -s, --space SPACE_NAME           REQUIRED. The Confluence space name in which the page resides.
-	    -f, --markdownFile FILE          Path to the Markdown file to convert and upload. Defaults to 'README.md'
-	    -c, --server CONFLUENCE_SERVER   The Confluence server to upload to. Defaults to 'http://confluence.example.com'
-	    -u, --user USER                  The Confluence user. Can also be specified by the 'CONFLUENCE_USER' environment variable.
-	    -p, --password PASSWORD          The Confluence user's password. Can also be specified by the 'CONFLUENCE_PASSWORD' environment variable.
-	    -v, --verbose                    Output more information
-	    -h, --help                       Display this screen
+	    -i, --pageId PAGE_ID              The Confluence page id to upload the converted markdown to.
+	    -t, --parentPageId PARENT_PAGE_ID The parent Confluence page id to create the page in to upload the converted markdown to.
+	    -s, --space SPACE_NAME            REQUIRED. The Confluence space name in which the page resides.
+	    -f, --markdownFile FILE           Path to the Markdown file to convert and upload. Defaults to 'README.md'
+	    -c, --server CONFLUENCE_SERVER    The Confluence server to upload to. Defaults to 'http://confluence.example.com'
+	    -u, --user USER                   The Confluence user. Can also be specified by the 'CONFLUENCE_USER' environment variable.
+	    -p, --password PASSWORD           The Confluence user's password. Can also be specified by the 'CONFLUENCE_PASSWORD' environment variable.
+	    -v, --verbose                     Output more information
+	    -h, --help                        Display this screen
 
 
 Installation
